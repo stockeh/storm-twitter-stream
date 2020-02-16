@@ -9,7 +9,7 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<storm.version>2.1.0</storm.version>
-		<exec.version>1.6.0</exec.version>
+		<twitter.version>4.0.7</twitter.version>
 	</properties>
 
 	<repositories>
@@ -32,6 +32,16 @@
 			<version>${storm.version}</version>
 			<!-- keep storm out of the jar-with-dependencies -->
 			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.twitter4j</groupId>
+			<artifactId>twitter4j-core</artifactId>
+			<version>${twitter.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.twitter4j</groupId>
+			<artifactId>twitter4j-stream</artifactId>
+			<version>${twitter.version}</version>
 		</dependency>
 	</dependencies>
 
