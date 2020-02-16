@@ -45,26 +45,6 @@
 					<target>1.8</target>
 				</configuration>
 			</plugin>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>exec-maven-plugin</artifactId>
-				<version>${exec.version}</version>
-				<executions>
-					<execution>
-						<goals>
-							<goal>exec</goal>
-						</goals>
-					</execution>
-				</executions>
-				<configuration>
-					<executable>java</executable>
-					<includeProjectDependencies>true</includeProjectDependencies>
-					<includePluginDependencies>false</includePluginDependencies>
-					<classpathScope>compile</classpathScope>
-					<mainClass>${storm.topology}</mainClass>
-					<cleanupDaemonThreads>false</cleanupDaemonThreads>
-				</configuration>
-			</plugin>
 		</plugins>
 	</build>
 
