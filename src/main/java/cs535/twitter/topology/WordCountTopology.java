@@ -1,15 +1,8 @@
 package cs535.twitter.topology;
 
-import java.util.List;
-import java.util.stream.Collectors;
-import org.apache.storm.LocalCluster;
-import org.apache.storm.generated.KillOptions;
-import org.apache.storm.generated.TopologySummary;
-import org.apache.storm.thrift.TException;
 import org.apache.storm.topology.ConfigurableTopology;
 import org.apache.storm.topology.TopologyBuilder;
 import org.apache.storm.tuple.Fields;
-import org.apache.storm.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import cs535.twitter.bolt.SplitSentence;
@@ -34,7 +27,7 @@ public class WordCountTopology extends ConfigurableTopology {
 			if ( args[ 0 ].equalsIgnoreCase( "local" ) )
 			{
 				LocalTopology.run( new WordCountTopology().createTopology(),
-						TOPOLOGY_NAME );
+						TOPOLOGY_NAME, 30000 );
 			}
 		} else
 		{

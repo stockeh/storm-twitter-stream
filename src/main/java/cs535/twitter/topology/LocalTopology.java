@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 final class LocalTopology {
 
 	private static final Logger LOG =
-			LoggerFactory.getLogger( WordCountTopology.class );
+			LoggerFactory.getLogger( LocalTopology.class );
 
 	/**
 	 * Run the topology in the local cluster
@@ -23,7 +23,8 @@ final class LocalTopology {
 	 * @param topology
 	 * @param name
 	 */
-	public static final void run(TopologyBuilder topology, String name) {
+	public static final void run(TopologyBuilder topology, String name,
+			long timeout) {
 		LocalCluster cluster = null;
 		try
 		{
@@ -32,7 +33,7 @@ final class LocalTopology {
 			cluster.submitTopology( name, new Config(),
 					topology.createTopology() );
 
-			Utils.sleep( 30000 );
+			Utils.sleep( timeout );
 
 			final KillOptions killOptions = new KillOptions();
 			killOptions.set_wait_secs( 0 );

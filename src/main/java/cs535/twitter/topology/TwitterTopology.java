@@ -7,8 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import cs535.twitter.bolt.SplitSentence;
 import cs535.twitter.bolt.WordCount;
-import cs535.twitter.spout.RandomSentenceSpout;
-import cs535.twitter.util.Properties;
+import cs535.twitter.spout.TwitterSpout;
 
 public class TwitterTopology extends ConfigurableTopology {
 
@@ -22,17 +21,12 @@ public class TwitterTopology extends ConfigurableTopology {
 
 	public static void main(String[] args) throws Exception {
 
-		LOG.info( Properties.OAUTH_CONSUMER_KEY );
-		LOG.info( Properties.OAUTH_CONSUMER_SECRET );
-		LOG.info( Properties.OAUTH_ACCESS_TOKEN );
-		LOG.info( Properties.OAUTH_ACCESS_TOKEN_SECRET );
-
 		if ( args.length > 0 )
 		{
 			if ( args[ 0 ].equalsIgnoreCase( "local" ) )
 			{
 				LocalTopology.run( new TwitterTopology().createTopology( args ),
-						TOPOLOGY_NAME );
+						TOPOLOGY_NAME, 60000 * 1 );
 			}
 		} else
 		{
@@ -43,10 +37,10 @@ public class TwitterTopology extends ConfigurableTopology {
 	private TopologyBuilder createTopology(String[] args) {
 
 		TopologyBuilder builder = new TopologyBuilder();
-		builder.setSpout( SENTANCE_SPOUT_ID, new RandomSentenceSpout(), 5 );
-		builder.setBolt( SPLIT_BOLT_ID, new SplitSentence(), 8 )
+		builder.setSpout( SENTANCE_SPOUT_ID, new TwitterSpout() );
+		builder.setBolt( SPLIT_BOLT_ID, new SplitSentence() )
 				.shuffleGrouping( SENTANCE_SPOUT_ID );
-		builder.setBolt( COUNT_BOLT_ID, new WordCount(), 12 )
+		builder.setBolt( COUNT_BOLT_ID, new WordCount() )
 				.fieldsGrouping( SPLIT_BOLT_ID, new Fields( "word" ) );
 
 		LOG.info( "Topology name: " + TOPOLOGY_NAME );

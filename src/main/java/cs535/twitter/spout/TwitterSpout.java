@@ -10,7 +10,9 @@ import org.apache.storm.topology.base.BaseRichSpout;
 import org.apache.storm.tuple.Fields;
 import org.apache.storm.tuple.Values;
 import org.apache.storm.utils.Utils;
-import twitter4j.FilterQuery;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import cs535.twitter.util.Properties;
 import twitter4j.StallWarning;
 import twitter4j.Status;
 import twitter4j.StatusDeletionNotice;
@@ -24,103 +26,91 @@ public class TwitterSpout extends BaseRichSpout {
 
 	private static final long serialVersionUID = 6549071650320465459L;
 
-	SpoutOutputCollector _collector;
-	LinkedBlockingQueue<Status> queue = null;
-	TwitterStream _twitterStream;
-	String consumerKey;
-	String consumerSecret;
-	String accessToken;
-	String accessTokenSecret;
-	String[] keyWords;
+	private static final Logger LOG =
+			LoggerFactory.getLogger( TwitterSpout.class );
 
-	public TwitterSpout(String consumerKey, String consumerSecret,
-			String accessToken, String accessTokenSecret, String[] keyWords) {
-		this.consumerKey = consumerKey;
-		this.consumerSecret = consumerSecret;
-		this.accessToken = accessToken;
-		this.accessTokenSecret = accessTokenSecret;
-		this.keyWords = keyWords;
-	}
+	private SpoutOutputCollector collector;
+	private LinkedBlockingQueue<Status> queue = null;
+	private TwitterStream twitterStream;
 
 	@Override
 	public void open(Map<String, Object> conf, TopologyContext context,
 			SpoutOutputCollector collector) {
 		queue = new LinkedBlockingQueue<Status>( 1000 );
-		_collector = collector;
+		this.collector = collector;
 
 		StatusListener listener = new StatusListener() {
 
 			@Override
 			public void onStatus(Status status) {
-
 				queue.offer( status );
 			}
-
-			@Override
-			public void onDeletionNotice(StatusDeletionNotice sdn) {}
-
-			@Override
-			public void onTrackLimitationNotice(int i) {}
-
-			@Override
-			public void onScrubGeo(long l, long l1) {}
 
 			@Override
 			public void onException(Exception ex) {}
 
 			@Override
-			public void onStallWarning(StallWarning arg0) {
-				// TODO Auto-generated method stub
+			public void onDeletionNotice(
+					StatusDeletionNotice statusDeletionNotice) {}
 
-			}
+			@Override
+			public void onTrackLimitationNotice(int numberOfLimitedStatuses) {}
+
+			@Override
+			public void onScrubGeo(long userId, long upToStatusId) {}
+
+			@Override
+			public void onStallWarning(StallWarning warning) {}
 
 		};
 
-		TwitterStream twitterStream = new TwitterStreamFactory(
+		twitterStream = new TwitterStreamFactory(
 				new ConfigurationBuilder().setJSONStoreEnabled( true ).build() )
 						.getInstance();
 
+		LOG.info( "OAUTH_CONSUMER_KEY: " + Properties.OAUTH_CONSUMER_KEY );
+		LOG.info(
+				"OAUTH_CONSUMER_SECRET: " + Properties.OAUTH_CONSUMER_SECRET );
+
+		LOG.info( "OAUTH_ACCESS_TOKEN: " + Properties.OAUTH_ACCESS_TOKEN );
+		LOG.info( "OAUTH_ACCESS_TOKEN_SECRET: "
+				+ Properties.OAUTH_ACCESS_TOKEN_SECRET );
+
+
+		twitterStream.setOAuthConsumer( Properties.OAUTH_CONSUMER_KEY,
+				Properties.OAUTH_CONSUMER_SECRET );
+
+		twitterStream.setOAuthAccessToken(
+				new AccessToken( Properties.OAUTH_ACCESS_TOKEN,
+						Properties.OAUTH_ACCESS_TOKEN_SECRET ) );
+
 		twitterStream.addListener( listener );
-		twitterStream.setOAuthConsumer( consumerKey, consumerSecret );
-		AccessToken token = new AccessToken( accessToken, accessTokenSecret );
-		twitterStream.setOAuthAccessToken( token );
-
-		if ( keyWords.length == 0 )
-		{
-			twitterStream.sample();
-		}
-
-		else
-		{
-			FilterQuery query = new FilterQuery().track( keyWords );
-			twitterStream.filter( query );
-		}
-
+		twitterStream.sample();
 	}
 
 	@Override
 	public void nextTuple() {
-		Status ret = queue.poll();
-		if ( ret == null )
+		Status status = queue.poll();
+		if ( status == null )
 		{
 			Utils.sleep( 50 );
 		} else
 		{
-			_collector.emit( new Values( ret ) );
-
+			// LOG.info( status.getText() );
+			collector.emit( new Values( status.getText() ) );
 		}
 	}
 
 	@Override
 	public void close() {
-		_twitterStream.shutdown();
+		twitterStream.shutdown();
 	}
 
 	@Override
 	public Map<String, Object> getComponentConfiguration() {
-		Config ret = new Config();
-		ret.setMaxTaskParallelism( 1 );
-		return ret;
+		Config conf = new Config();
+		conf.setMaxTaskParallelism( 1 );
+		return conf;
 	}
 
 	@Override
@@ -131,7 +121,7 @@ public class TwitterSpout extends BaseRichSpout {
 
 	@Override
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
-		declarer.declare( new Fields( "tweet" ) );
+		declarer.declare( new Fields( "text" ) );
 	}
 
 }

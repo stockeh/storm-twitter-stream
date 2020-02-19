@@ -2,6 +2,7 @@ package cs535.twitter.bolt;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.storm.Config;
@@ -12,32 +13,25 @@ import org.apache.storm.topology.base.BaseBasicBolt;
 import org.apache.storm.tuple.Fields;
 import org.apache.storm.tuple.Tuple;
 import org.apache.storm.tuple.Values;
+import cs535.twitter.util.Utilities;
 
-// There are a variety of bolt types. In this case, use BaseBasicBolt
 public class WordCount extends BaseBasicBolt {
 
 	private static final long serialVersionUID = -7619769952927707443L;
-	// Create logger for this class
-	private static final Logger logger =
-			LogManager.getLogger( WordCount.class );
-	// For holding words and counts
-	Map<String, Integer> counts = new HashMap<String, Integer>();
-	// How often to emit a count of words
-	private Integer emitFrequency;
 
-	// Default constructor
+	private static final Logger LOG = LogManager.getLogger( WordCount.class );
+
+	private final Map<String, Integer> counts = new HashMap<String, Integer>();
+	private final int emitFrequency;
+
 	public WordCount() {
-		emitFrequency = 5; // Default to 60 seconds
+		emitFrequency = 10;
 	}
 
-	// Constructor that sets emit frequency
-	public WordCount(Integer frequency) {
+	public WordCount(int frequency) {
 		emitFrequency = frequency;
 	}
 
-	// Configure frequency of tick tuples for this bolt
-	// This delivers a 'tick' tuple on a specific interval,
-	// which is used to trigger certain actions
 	@Override
 	public Map<String, Object> getComponentConfiguration() {
 		Config conf = new Config();
@@ -45,37 +39,45 @@ public class WordCount extends BaseBasicBolt {
 		return conf;
 	}
 
-	// execute is called to process tuples
 	@Override
 	public void execute(Tuple tuple, BasicOutputCollector collector) {
-		// If it's a tick tuple, emit all words and counts
 		if ( tuple.getSourceComponent().equals( Constants.SYSTEM_COMPONENT_ID )
 				&& tuple.getSourceStreamId()
 						.equals( Constants.SYSTEM_TICK_STREAM_ID ) )
 		{
-			for ( String word : counts.keySet() )
+			String total = "-----------" + counts.size() + " total-----------";
+			LOG.info( total );
+			collector.emit( new Values( total, -1 ) );
+			
+			Map<String, Integer> output =
+					Utilities.sortMapByValue( counts, true );
+			counts.clear();
+			int items = 0;
+			for ( Entry<String, Integer> entry : output.entrySet() )
 			{
-				Integer count = counts.get( word );
-				collector.emit( new Values( word, count ) );
-				logger.info(
-						"Emitting a count of " + count + " for word " + word );
+				collector
+						.emit( new Values( entry.getKey(), entry.getValue() ) );
+				LOG.info( "Word: " + entry.getKey() + ", Count: "
+						+ entry.getValue() );
+				if ( ++items == 100 )
+				{
+					break;
+				}
 			}
+
 		} else
 		{
-			// Get the word contents from the tuple
 			String word = tuple.getString( 0 );
-			// Have we counted any already?
 			Integer count = counts.get( word );
 			if ( count == null )
+			{
 				count = 0;
-			// Increment the count and store it
+			}
 			count++;
 			counts.put( word, count );
 		}
 	}
 
-	// Declare that this emits a tuple containing two fields; word and
-	// count
 	@Override
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
 		declarer.declare( new Fields( "word", "count" ) );
