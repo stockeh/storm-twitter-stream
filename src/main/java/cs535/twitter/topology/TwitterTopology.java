@@ -14,7 +14,7 @@ public class TwitterTopology extends ConfigurableTopology {
 	private static final Logger LOG =
 			LoggerFactory.getLogger( TwitterTopology.class );
 
-	private static final String TOPOLOGY_NAME = "word-count";
+	private static final String TOPOLOGY_NAME = "twitter-count";
 	private static final String SENTANCE_SPOUT_ID = "sentance-spout";
 	private static final String SPLIT_BOLT_ID = "split-bold";
 	private static final String COUNT_BOLT_ID = "count-bold";
@@ -37,10 +37,10 @@ public class TwitterTopology extends ConfigurableTopology {
 	private TopologyBuilder createTopology(String[] args) {
 
 		TopologyBuilder builder = new TopologyBuilder();
-		builder.setSpout( SENTANCE_SPOUT_ID, new TwitterSpout() );
-		builder.setBolt( SPLIT_BOLT_ID, new SplitSentence() )
+		builder.setSpout( SENTANCE_SPOUT_ID, new TwitterSpout(), 1 );
+		builder.setBolt( SPLIT_BOLT_ID, new SplitSentence(), 8 )
 				.shuffleGrouping( SENTANCE_SPOUT_ID );
-		builder.setBolt( COUNT_BOLT_ID, new WordCount() )
+		builder.setBolt( COUNT_BOLT_ID, new WordCount(), 1 )
 				.fieldsGrouping( SPLIT_BOLT_ID, new Fields( "word" ) );
 
 		LOG.info( "Topology name: " + TOPOLOGY_NAME );

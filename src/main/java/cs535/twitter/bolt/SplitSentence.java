@@ -24,10 +24,10 @@ public class SplitSentence extends BaseBasicBolt {
 		{
 			String word = sentence.substring( start, end );
 			word = word.replaceAll( "\\s+", "" );
-			if ( word.length() > 1 && word.charAt( 0 ) == '#' )
-			{
-				collector.emit( new Values( word ) );
-			}
+			// if ( word.length() > 1 && word.charAt( 0 ) == '#' )
+			// {
+			collector.emit( new Values( word ) );
+			// }
 		}
 	}
 

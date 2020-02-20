@@ -2,7 +2,6 @@ package cs535.twitter.spout;
 
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
-import org.apache.storm.Config;
 import org.apache.storm.spout.SpoutOutputCollector;
 import org.apache.storm.task.TopologyContext;
 import org.apache.storm.topology.OutputFieldsDeclarer;
@@ -106,12 +105,12 @@ public class TwitterSpout extends BaseRichSpout {
 		twitterStream.shutdown();
 	}
 
-	@Override
-	public Map<String, Object> getComponentConfiguration() {
-		Config conf = new Config();
-		conf.setMaxTaskParallelism( 1 );
-		return conf;
-	}
+	// @Override
+	// public Map<String, Object> getComponentConfiguration() {
+	// Config conf = new Config();
+	// conf.setMaxTaskParallelism( 1 );
+	// return conf;
+	// }
 
 	@Override
 	public void ack(Object id) {}
