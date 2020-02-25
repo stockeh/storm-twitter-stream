@@ -13,6 +13,7 @@ import org.apache.storm.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import cs535.twitter.util.Properties;
+import twitter4j.HashtagEntity;
 import twitter4j.StallWarning;
 import twitter4j.Status;
 import twitter4j.StatusDeletionNotice;
@@ -96,8 +97,10 @@ public class TwitterSpout extends BaseRichSpout {
 			Utils.sleep( 50 );
 		} else
 		{
-			// LOG.info( status.getText() );
-			collector.emit( new Values( status.getText() ) );
+			for ( HashtagEntity e : status.getHashtagEntities() )
+			{
+				collector.emit( new Values( e.getText() ) );
+			}
 		}
 	}
 

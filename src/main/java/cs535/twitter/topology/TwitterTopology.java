@@ -5,7 +5,6 @@ import org.apache.storm.topology.TopologyBuilder;
 import org.apache.storm.tuple.Fields;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import cs535.twitter.bolt.SplitSentence;
 import cs535.twitter.bolt.WordCount;
 import cs535.twitter.spout.TwitterSpout;
 
@@ -16,7 +15,6 @@ public class TwitterTopology extends ConfigurableTopology {
 
 	private static final String TOPOLOGY_NAME = "word-count";
 	private static final String SENTANCE_SPOUT_ID = "sentance-spout";
-	private static final String SPLIT_BOLT_ID = "split-bold";
 	private static final String COUNT_BOLT_ID = "count-bold";
 
 	public static void main(String[] args) throws Exception {
@@ -26,7 +24,7 @@ public class TwitterTopology extends ConfigurableTopology {
 			if ( args[ 0 ].equalsIgnoreCase( "local" ) )
 			{
 				LocalTopology.run( new TwitterTopology().createTopology( args ),
-						TOPOLOGY_NAME, 60000 * 1 );
+						TOPOLOGY_NAME, 40000 * 2 );
 			}
 		} else
 		{
@@ -37,11 +35,9 @@ public class TwitterTopology extends ConfigurableTopology {
 	private TopologyBuilder createTopology(String[] args) {
 
 		TopologyBuilder builder = new TopologyBuilder();
-		builder.setSpout( SENTANCE_SPOUT_ID, new TwitterSpout() );
-		builder.setBolt( SPLIT_BOLT_ID, new SplitSentence() )
-				.shuffleGrouping( SENTANCE_SPOUT_ID );
+		builder.setSpout( SENTANCE_SPOUT_ID, new TwitterSpout(), 3 );
 		builder.setBolt( COUNT_BOLT_ID, new WordCount() )
-				.fieldsGrouping( SPLIT_BOLT_ID, new Fields( "word" ) );
+				.fieldsGrouping( SENTANCE_SPOUT_ID, new Fields( "text" ) );
 
 		LOG.info( "Topology name: " + TOPOLOGY_NAME );
 
