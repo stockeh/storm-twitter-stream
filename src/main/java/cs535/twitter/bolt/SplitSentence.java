@@ -29,7 +29,6 @@ public class SplitSentence extends BaseBasicBolt {
 				collector.emit( new Values( word ) );
 			}
 		}
-		collector.emit( new Values( sentence ) );
 	}
 
 	@Override

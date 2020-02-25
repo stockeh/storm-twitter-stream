@@ -13,7 +13,7 @@ public class TwitterTopology extends ConfigurableTopology {
 	private static final Logger LOG =
 			LoggerFactory.getLogger( TwitterTopology.class );
 
-	private static final String TOPOLOGY_NAME = "word-count";
+	private static final String TOPOLOGY_NAME = "twitter-count";
 	private static final String SENTANCE_SPOUT_ID = "sentance-spout";
 	private static final String COUNT_BOLT_ID = "count-bold";
 
