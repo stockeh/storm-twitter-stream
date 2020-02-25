@@ -108,13 +108,6 @@ public class TwitterSpout extends BaseRichSpout {
 		twitterStream.shutdown();
 	}
 
-	// @Override
-	// public Map<String, Object> getComponentConfiguration() {
-	// Config conf = new Config();
-	// conf.setMaxTaskParallelism( 1 );
-	// return conf;
-	// }
-
 	@Override
 	public void ack(Object id) {}
 
@@ -123,7 +116,7 @@ public class TwitterSpout extends BaseRichSpout {
 
 	@Override
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
-		declarer.declare( new Fields( "text" ) );
+		declarer.declare( new Fields( "hash" ) );
 	}
 
 }

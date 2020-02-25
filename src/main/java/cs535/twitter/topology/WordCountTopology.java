@@ -1,5 +1,6 @@
 package cs535.twitter.topology;
 
+import org.apache.storm.Config;
 import org.apache.storm.topology.ConfigurableTopology;
 import org.apache.storm.topology.TopologyBuilder;
 import org.apache.storm.tuple.Fields;
@@ -26,8 +27,8 @@ public class WordCountTopology extends ConfigurableTopology {
 		{
 			if ( args[ 0 ].equalsIgnoreCase( "local" ) )
 			{
-				LocalTopology.run( new WordCountTopology().createTopology(),
-						TOPOLOGY_NAME, 30000 );
+				LocalTopology.run( TOPOLOGY_NAME, new Config(),
+						new WordCountTopology().createTopology(), 30000 );
 			}
 		} else
 		{

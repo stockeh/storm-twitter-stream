@@ -21,4 +21,7 @@ public interface Properties {
 	final String OAUTH_ACCESS_TOKEN_SECRET = Configurations.getInstance()
 			.getProperty( "oauth.access.token.secret" );
 
+	final String LOG_FILE =
+			Configurations.getInstance().getProperty( "log.file" );
+
 }

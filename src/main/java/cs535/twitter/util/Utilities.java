@@ -18,11 +18,11 @@ public class Utilities {
 	 * @param descending true for descending, false for ascending
 	 * @return a new map of sorted <K, V> pairs.=
 	 */
-	public static Map<String, Integer> sortMapByValue(Map<String, Integer> map,
+	public static Map<String, Long> sortMapByValue(Map<String, Long> map,
 			boolean descending) {
 
-		Comparator<Entry<String, Integer>> comparator =
-				Map.Entry.<String, Integer>comparingByValue();
+		Comparator<Entry<String, Long>> comparator =
+				Map.Entry.<String, Long>comparingByValue();
 
 		if ( descending )
 		{

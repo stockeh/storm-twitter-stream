@@ -1,14 +1,16 @@
 package cs535.twitter.topology;
 
-import org.apache.storm.topology.ConfigurableTopology;
+import org.apache.storm.Config;
+import org.apache.storm.StormSubmitter;
 import org.apache.storm.topology.TopologyBuilder;
 import org.apache.storm.tuple.Fields;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import cs535.twitter.bolt.Reporter;
 import cs535.twitter.bolt.WordCount;
 import cs535.twitter.spout.TwitterSpout;
 
-public class TwitterTopology extends ConfigurableTopology {
+public class TwitterTopology {
 
 	private static final Logger LOG =
 			LoggerFactory.getLogger( TwitterTopology.class );
@@ -16,38 +18,64 @@ public class TwitterTopology extends ConfigurableTopology {
 	private static final String TOPOLOGY_NAME = "twitter-count";
 	private static final String SENTANCE_SPOUT_ID = "sentance-spout";
 	private static final String COUNT_BOLT_ID = "count-bold";
+	private static final String REPORT_BOLT_ID = "report-bold";
+
+	private final TopologyBuilder builder;
+
+	private final Config conf;
+
+	private TwitterTopology(boolean parallel) {
+		builder = createTopology( parallel );
+		conf = createConfig( parallel );
+	}
 
 	public static void main(String[] args) throws Exception {
+		boolean parallel = false;
+		boolean local = false;
 
-		if ( args.length > 0 )
+		if ( args.length > 1 )
 		{
-			if ( args[ 0 ].equalsIgnoreCase( "local" ) )
-			{
-				LocalTopology.run( new TwitterTopology().createTopology( args ),
-						TOPOLOGY_NAME, 40000 * 2 );
-			}
+			parallel = args[ 0 ].equalsIgnoreCase( "parallel" );
+			local = args[ 1 ].equalsIgnoreCase( "local" );
 		} else
 		{
-			ConfigurableTopology.start( new TwitterTopology(), args );
+			LOG.error( "Exiting! Invalid CLI parameters." );
+			System.exit( 1 );
+		}
+
+		TwitterTopology t = new TwitterTopology( parallel );
+
+		if ( local )
+		{
+			LocalTopology.run( TOPOLOGY_NAME, t.conf, t.builder, 40000 * 2 );
+		} else
+		{
+			StormSubmitter.submitTopology( TOPOLOGY_NAME, t.conf,
+					t.builder.createTopology() );
 		}
 	}
 
-	private TopologyBuilder createTopology(String[] args) {
+	private Config createConfig(boolean parallel) {
+		Config conf = new Config();
+		if ( parallel )
+		{
+			conf.setNumWorkers( 1 );
+		}
+		return conf;
+	}
+
+	private TopologyBuilder createTopology(boolean parallel) {
 
 		TopologyBuilder builder = new TopologyBuilder();
-		builder.setSpout( SENTANCE_SPOUT_ID, new TwitterSpout(), 3 );
+		builder.setSpout( SENTANCE_SPOUT_ID, new TwitterSpout() );
 		builder.setBolt( COUNT_BOLT_ID, new WordCount() )
-				.fieldsGrouping( SENTANCE_SPOUT_ID, new Fields( "text" ) );
+				.fieldsGrouping( SENTANCE_SPOUT_ID, new Fields( "hash" ) );
+		builder.setBolt( REPORT_BOLT_ID, new Reporter() ).fieldsGrouping(
+				COUNT_BOLT_ID, new Fields( "output", "time" ) );
 
 		LOG.info( "Topology name: " + TOPOLOGY_NAME );
 
 		return builder;
-	}
-
-	@Override
-	protected int run(String[] args) {
-		return super.submit( TOPOLOGY_NAME, super.conf,
-				createTopology( args ) );
 	}
 
 }

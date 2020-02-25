@@ -23,15 +23,14 @@ final class LocalTopology {
 	 * @param topology
 	 * @param name
 	 */
-	public static final void run(TopologyBuilder topology, String name,
-			long timeout) {
+	public static final void run(String name, Config conf,
+			TopologyBuilder topology, long timeout) {
 		LocalCluster cluster = null;
 		try
 		{
 			cluster = new LocalCluster();
 
-			cluster.submitTopology( name, new Config(),
-					topology.createTopology() );
+			cluster.submitTopology( name, conf, topology.createTopology() );
 
 			Utils.sleep( timeout );
 
