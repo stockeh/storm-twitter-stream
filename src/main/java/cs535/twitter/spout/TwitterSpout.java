@@ -98,7 +98,10 @@ public class TwitterSpout extends BaseRichSpout {
 		{
 			for ( HashtagEntity e : status.getHashtagEntities() )
 			{
-				collector.emit( new Values( e.getText() ) );
+				if ( status.getLang().equals( "en" ) )
+				{
+					collector.emit( new Values( e.getText() ) );
+				}
 			}
 		}
 	}

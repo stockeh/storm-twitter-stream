@@ -7,7 +7,7 @@ import org.apache.storm.tuple.Fields;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import cs535.twitter.bolt.Reporter;
-import cs535.twitter.bolt.WordCount;
+import cs535.twitter.bolt.LossyCount;
 import cs535.twitter.spout.TwitterSpout;
 
 public class TwitterTopology {
@@ -68,7 +68,7 @@ public class TwitterTopology {
 
 		TopologyBuilder builder = new TopologyBuilder();
 		builder.setSpout( SENTANCE_SPOUT_ID, new TwitterSpout() );
-		builder.setBolt( COUNT_BOLT_ID, new WordCount() )
+		builder.setBolt( COUNT_BOLT_ID, new LossyCount() )
 				.fieldsGrouping( SENTANCE_SPOUT_ID, new Fields( "hash" ) );
 		builder.setBolt( REPORT_BOLT_ID, new Reporter() ).fieldsGrouping(
 				COUNT_BOLT_ID, new Fields( "output", "time" ) );

@@ -7,7 +7,7 @@ import org.apache.storm.tuple.Fields;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import cs535.twitter.bolt.SplitSentence;
-import cs535.twitter.bolt.WordCount;
+import cs535.twitter.bolt.LossyCount;
 import cs535.twitter.spout.RandomSentenceSpout;
 
 public class WordCountTopology extends ConfigurableTopology {
@@ -41,7 +41,7 @@ public class WordCountTopology extends ConfigurableTopology {
 		builder.setSpout( SENTANCE_SPOUT_ID, new RandomSentenceSpout(), 5 );
 		builder.setBolt( SPLIT_BOLT_ID, new SplitSentence(), 8 )
 				.shuffleGrouping( SENTANCE_SPOUT_ID );
-		builder.setBolt( COUNT_BOLT_ID, new WordCount(), 12 )
+		builder.setBolt( COUNT_BOLT_ID, new LossyCount(), 12 )
 				.fieldsGrouping( SPLIT_BOLT_ID, new Fields( "word" ) );
 
 		LOG.info( "Topology name: " + TOPOLOGY_NAME );

@@ -24,4 +24,9 @@ public interface Properties {
 	final String LOG_FILE =
 			Configurations.getInstance().getProperty( "log.file" );
 
+	final Double EPSILON = Double.parseDouble(
+			Configurations.getInstance().getProperty( "epsilon", "0.20" ) );
+
+	final String SEPERATOR = "\t";
+
 }
