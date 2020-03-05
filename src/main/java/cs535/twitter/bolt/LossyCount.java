@@ -1,12 +1,8 @@
 package cs535.twitter.bolt;
 
-import java.time.Instant;
-import java.util.Comparator;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.storm.Config;
@@ -19,6 +15,7 @@ import org.apache.storm.tuple.Fields;
 import org.apache.storm.tuple.Tuple;
 import org.apache.storm.tuple.Values;
 import cs535.twitter.util.Properties;
+import cs535.twitter.util.Utilities;
 
 public class LossyCount extends BaseRichBolt {
 
@@ -42,6 +39,11 @@ public class LossyCount extends BaseRichBolt {
 	}
 
 	@Override
+	public void declareOutputFields(OutputFieldsDeclarer declarer) {
+		declarer.declare( new Fields( "word", "count" ) );
+	}
+
+	@Override
 	public Map<String, Object> getComponentConfiguration() {
 		int emitFrequency = 10;
 		Config conf = new Config();
@@ -50,50 +52,21 @@ public class LossyCount extends BaseRichBolt {
 	}
 
 	@Override
-	public void declareOutputFields(OutputFieldsDeclarer declarer) {
-		declarer.declare( new Fields( "output", "time" ) );
-	}
-
-	@Override
 	public void execute(Tuple input) {
 		if ( input.getSourceComponent().equals( Constants.SYSTEM_COMPONENT_ID )
 				&& input.getSourceStreamId()
 						.equals( Constants.SYSTEM_TICK_STREAM_ID ) )
 		{
-			int size = counts.size() > 100 ? 100 : counts.size();
-			if ( size == 0 )
-			{
-				return;
-			}
-
-			Map<String, Item> output = counts.entrySet().stream()
-					.sorted( Map.Entry
-							.comparingByValue( Comparator.reverseOrder() ) )
-					.limit( size )
-					.collect( Collectors.toMap( Map.Entry::getKey,
-							Map.Entry::getValue, (e1, e2) -> e1,
-							LinkedHashMap::new ) );
-			// counts.clear();
-
-			StringBuilder sb = new StringBuilder();
-
-			for ( Entry<String, Item> entry : output.entrySet() )
-			{
-				sb.append( entry.getKey() ).append( "(" )
-						.append( entry.getValue().frequency ).append( "), " );
-			}
-			collector.emit(
-					new Values( sb.toString(), Instant.now().toString() ) );
-
-			LOG.info( "bucket: " + bucket + ", " + sb.toString() );
+			forward();
 		} else
 		{
 			if ( ++items % capacity == 0 )
 			{
+				// process entire bucket and then run delete phase.
+				delete();
 				++bucket;
 			}
 			insert( input );
-			delete();
 		}
 	}
 
@@ -102,15 +75,33 @@ public class LossyCount extends BaseRichBolt {
 		Item item = counts.get( s );
 		if ( item == null )
 		{
-			item = new Item( bucket );
+			item = new Item( bucket - 1 );
 		}
 		item.increment();
-		// LOG.info( bucket + " " + s + "(" + item.frequency + ")" );
 		counts.put( s, item );
 	}
 
 	private void delete() {
 		counts.values().removeIf( value -> value.deconstruct( bucket ) );
+	}
+
+	private void forward() {
+		int size = counts.size() > 100 ? 100 : counts.size();
+		if ( size == 0 )
+		{
+			return;
+		}
+		Map<String, Item> output = Utilities.sortMapDecending( counts, size );
+		StringBuilder sb = new StringBuilder();
+		for ( Entry<String, Item> entry : output.entrySet() )
+		{
+			// sb.append( entry.getKey() ).append( "_" ).append( bucket )
+			// .append( "_" ).append( entry.getValue().toString() )
+			// .append( " " );
+			collector.emit(
+					new Values( entry.getKey(), entry.getValue().frequency ) );
+		}
+		// LOG.info( sb.toString() );
 	}
 
 	private final static class Item implements Comparable<Item> {
@@ -133,6 +124,11 @@ public class LossyCount extends BaseRichBolt {
 		@Override
 		public int compareTo(Item o) {
 			return Long.compare( this.frequency, o.frequency );
+		}
+
+		@Override
+		public String toString() {
+			return "( " + delta + ", " + frequency + " )";
 		}
 	}
 

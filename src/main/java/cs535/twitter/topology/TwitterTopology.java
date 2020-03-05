@@ -6,8 +6,8 @@ import org.apache.storm.topology.TopologyBuilder;
 import org.apache.storm.tuple.Fields;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import cs535.twitter.bolt.Reporter;
 import cs535.twitter.bolt.LossyCount;
+import cs535.twitter.bolt.Reporter;
 import cs535.twitter.spout.TwitterSpout;
 
 public class TwitterTopology {
@@ -59,19 +59,28 @@ public class TwitterTopology {
 		Config conf = new Config();
 		if ( parallel )
 		{
-			conf.setNumWorkers( 1 );
+			conf.setNumWorkers( 3 );
 		}
 		return conf;
 	}
 
 	private TopologyBuilder createTopology(boolean parallel) {
 
+		int executorTasks = 1;
+		int threads = 1;
+		if ( parallel )
+		{
+			executorTasks = 4;
+			threads = 2;
+		}
+
 		TopologyBuilder builder = new TopologyBuilder();
 		builder.setSpout( SENTANCE_SPOUT_ID, new TwitterSpout() );
-		builder.setBolt( COUNT_BOLT_ID, new LossyCount() )
+		builder.setBolt( COUNT_BOLT_ID, new LossyCount(), threads )
+				.setNumTasks( executorTasks )
 				.fieldsGrouping( SENTANCE_SPOUT_ID, new Fields( "hash" ) );
-		builder.setBolt( REPORT_BOLT_ID, new Reporter() ).fieldsGrouping(
-				COUNT_BOLT_ID, new Fields( "output", "time" ) );
+		builder.setBolt( REPORT_BOLT_ID, new Reporter() )
+				.globalGrouping( COUNT_BOLT_ID );
 
 		LOG.info( "Topology name: " + TOPOLOGY_NAME );
 
