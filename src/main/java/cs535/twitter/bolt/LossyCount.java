@@ -66,6 +66,15 @@ public class LossyCount extends BaseRichBolt {
 		}
 	}
 
+	/**
+	 * insert the items to D updating the ones that exist or creating a
+	 * new entry (e, 1, b - 1) <br>
+	 * <br>
+	 * e : current word <br>
+	 * b : current bucket
+	 * 
+	 * @param input
+	 */
 	private void insert(Tuple input) {
 		String s = input.getStringByField( "hash" );
 		Item item = counts.get( s );
@@ -77,11 +86,28 @@ public class LossyCount extends BaseRichBolt {
 		counts.put( s, item );
 	}
 
+	/**
+	 * items from the current D where f + d <= b <br>
+	 * <br>
+	 * f : frequency of word <br>
+	 * d : delta value of b - 1 when seen <br>
+	 * b : current bucket
+	 */
 	private void delete() {
 		counts.values().removeIf( value -> value.deconstruct( bucket ) );
 	}
 
+	/**
+	 * The top 100 true frequencies of e : f + delta <br>
+	 * <br>
+	 * f : frequency of word <br>
+	 * d : delta value of b - 1 when seen <br>
+	 * 
+	 */
 	private void forward() {
+
+		filter();
+
 		int size = counts.size() > 100 ? 100 : counts.size();
 		if ( size == 0 )
 		{
@@ -95,6 +121,28 @@ public class LossyCount extends BaseRichBolt {
 		}
 	}
 
+	/**
+	 * Only emit those entries in data structure D, where f >= (s - e) / N
+	 * <br>
+	 * <br>
+	 * f : frequency of word <br>
+	 * s : threshold (between 0 - 1) <br>
+	 * e : epsilon <br>
+	 * N : total number of items in D data structure D <br>
+	 * 
+	 */
+	private void filter() {
+		int total = counts.size();
+		counts.values()
+				.removeIf( value -> value.frequency < ( Properties.THRESHOLD
+						- Properties.EPSILON ) / total );
+	}
+
+	/**
+	 * 
+	 * @author stock
+	 *
+	 */
 	private final static class Item implements Comparable<Item> {
 
 		private final int delta;

@@ -27,6 +27,9 @@ public interface Properties {
 	final Double EPSILON = Double.parseDouble(
 			Configurations.getInstance().getProperty( "epsilon", "0.20" ) );
 
+	final Double THRESHOLD = Double.parseDouble(
+			Configurations.getInstance().getProperty( "threshold", "0.20" ) );
+
 	final String SEPERATOR = "\t";
 
 }
