@@ -16,7 +16,7 @@ public class TwitterTopology {
 			LoggerFactory.getLogger( TwitterTopology.class );
 
 	private static final String TOPOLOGY_NAME = "twitter-count";
-	private static final String SENTANCE_SPOUT_ID = "sentance-spout";
+	private static final String SENTANCE_SPOUT_ID = "hashtag-spout";
 	private static final String COUNT_BOLT_ID = "count-bold";
 	private static final String REPORT_BOLT_ID = "report-bold";
 

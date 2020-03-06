@@ -10,7 +10,8 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<storm.version>2.1.0</storm.version>
 		<twitter.version>4.0.7</twitter.version>
-	</properties>
+        <maven.compile.version>3.8.1</maven.compile.version>
+    </properties>
 
 	<repositories>
 		<repository>
@@ -49,7 +50,8 @@
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven.compile.version}</version>
 				<configuration>
 					<source>1.8</source>
 					<target>1.8</target>
