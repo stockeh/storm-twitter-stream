@@ -3,8 +3,6 @@ package cs535.twitter.bolt;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.storm.Config;
 import org.apache.storm.Constants;
 import org.apache.storm.task.OutputCollector;
@@ -20,8 +18,6 @@ import cs535.twitter.util.Utilities;
 public class LossyCount extends BaseRichBolt {
 
 	private static final long serialVersionUID = -7619769952927707443L;
-
-	private static final Logger LOG = LogManager.getLogger( LossyCount.class );
 
 	private final Map<String, Item> counts = new HashMap<>();
 	private OutputCollector collector;
@@ -92,16 +88,11 @@ public class LossyCount extends BaseRichBolt {
 			return;
 		}
 		Map<String, Item> output = Utilities.sortMapDecending( counts, size );
-		StringBuilder sb = new StringBuilder();
 		for ( Entry<String, Item> entry : output.entrySet() )
 		{
-			// sb.append( entry.getKey() ).append( "_" ).append( bucket )
-			// .append( "_" ).append( entry.getValue().toString() )
-			// .append( " " );
-			collector.emit(
-					new Values( entry.getKey(), entry.getValue().frequency ) );
+			collector.emit( // actual is the f + d from Piazza @119
+					new Values( entry.getKey(), entry.getValue().actual() ) );
 		}
-		// LOG.info( sb.toString() );
 	}
 
 	private final static class Item implements Comparable<Item> {
@@ -111,6 +102,10 @@ public class LossyCount extends BaseRichBolt {
 
 		private Item(int delta) {
 			this.delta = delta;
+		}
+
+		private long actual() {
+			return frequency + delta;
 		}
 
 		private void increment() {
@@ -123,12 +118,12 @@ public class LossyCount extends BaseRichBolt {
 
 		@Override
 		public int compareTo(Item o) {
-			return Long.compare( this.frequency, o.frequency );
+			return Long.compare( this.actual(), o.actual() );
 		}
 
 		@Override
 		public String toString() {
-			return "( " + delta + ", " + frequency + " )";
+			return "( " + frequency + ", " + delta + " )";
 		}
 	}
 
